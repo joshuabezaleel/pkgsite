@@ -112,6 +112,10 @@ func (i *Info) LineURL(pathname string, line int) string {
 	})
 }
 
+func (i *Info) UsesURL() string {
+	return ""
+}
+
 // RawURL returns a URL referring to the raw contents of a file relative to the
 // module's home directory.
 func (i *Info) RawURL(pathname string) string {
@@ -614,11 +618,12 @@ func giteaTransformCommit(commit string, isHash bool) string {
 // 	• {line}       - Line number for the identifier ("41").
 //
 type urlTemplates struct {
-	Repo      string `json:",omitempty"` // Optional URL template for the repository home page, with {repo}. If left empty, a default template "{repo}" is used.
-	Directory string // URL template for a directory, with {repo}, {importPath}, {commit}, {dir}.
-	File      string // URL template for a file, with {repo}, {importPath}, {commit}, {file}, {base}.
-	Line      string // URL template for a line, with {repo}, {importPath}, {commit}, {file}, {base}, {line}.
-	Raw       string // Optional URL template for the raw contents of a file, with {repo}, {commit}, {file}.
+	Repo        string `json:",omitempty"` // Optional URL template for the repository home page, with {repo}. If left empty, a default template "{repo}" is used.
+	Directory   string // URL template for a directory, with {repo}, {importPath}, {commit}, {dir}.
+	File        string // URL template for a file, with {repo}, {importPath}, {commit}, {file}, {base}.
+	Line        string // URL template for a line, with {repo}, {importPath}, {commit}, {file}, {base}, {line}.
+	Raw         string // Optional URL template for the raw contents of a file, with {repo}, {commit}, {file}.
+	Sourcegraph string // Optional URL template that will redirect to Sourcegraph website for the usage of a type, function, or method, with {}
 }
 
 var (

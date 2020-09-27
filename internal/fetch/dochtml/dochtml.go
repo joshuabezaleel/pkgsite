@@ -28,6 +28,7 @@ import (
 	"github.com/google/safehtml/uncheckedconversions"
 	"golang.org/x/pkgsite/internal/fetch/dochtml/internal/render"
 	"golang.org/x/pkgsite/internal/fetch/internal/doc"
+	"golang.org/x/pkgsite/internal/log"
 )
 
 var (
@@ -55,6 +56,7 @@ type RenderOptions struct {
 	// string to indicate that a given file should not be linked.
 	FileLinkFunc   func(file string) (url string)
 	SourceLinkFunc func(ast.Node) string
+	UsesLinkFunc   func(defParts []string) string
 	// ModInfo optionally specifies information about the module the package
 	// belongs to in order to render module-related documentation.
 	ModInfo *ModuleInfo
@@ -116,6 +118,12 @@ func Render(ctx context.Context, fset *token.FileSet, p *doc.Package, opt Render
 		return linkHTML(name, opt.SourceLinkFunc(node), "Documentation-source")
 	}
 
+	usesLink := func(title string, defParts ...string) safehtml.HTML {
+		// name, url, class
+		return linkHTML(title, opt.UsesLinkFunc(defParts), "Documentation-uses")
+	}
+	// log.Info(ctx, usesLink)
+
 	tmpl := template.Must(htmlPackage.Clone()).Funcs(map[string]interface{}{
 		"render_short_synopsis": r.ShortSynopsis,
 		"render_synopsis":       r.Synopsis,
@@ -124,6 +132,7 @@ func Render(ctx context.Context, fset *token.FileSet, p *doc.Package, opt Render
 		"render_code":           r.CodeHTML,
 		"file_link":             fileLink,
 		"source_link":           sourceLink,
+		"uses_link":             usesLink,
 	})
 	data := struct {
 		RootURL string
@@ -162,7 +171,10 @@ func linkHTML(name, url, class string) safehtml.HTML {
 	if url == "" {
 		return safehtml.HTMLEscaped(name)
 	}
-	return render.ExecuteToHTML(render.LinkTemplate, render.Link{Class: class, Href: url, Text: name})
+	a := render.ExecuteToHTML(render.LinkTemplate, render.Link{Class: class, Href: url, Text: name})
+	log.Info(context.Background(), a)
+	return a
+	// return
 }
 
 // examples is an internal representation of all package examples.

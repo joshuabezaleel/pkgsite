@@ -95,7 +95,7 @@ const tmplBody = `
 		{{- range .Funcs -}}
 		<div class="Documentation-function">
 			{{- $id := safe_id .Name -}}
-			<h3 tabindex="-1" id="{{$id}}" data-kind="function" class="Documentation-functionHeader">func {{source_link .Name .Decl}} <a href="#{{$id}}">¶</a></h3>{{"\n"}}
+			<h3 tabindex="-1" id="{{$id}}" data-kind="function" class="Documentation-functionHeader">func {{source_link .Name .Decl}} <a href="#{{$id}}">¶asd</a> </h3>{{"\n"}}
 			{{- $out := render_decl .Doc .Decl -}}
 			{{- $out.Decl -}}
 			{{- $out.Doc -}}
