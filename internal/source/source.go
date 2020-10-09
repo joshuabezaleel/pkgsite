@@ -25,6 +25,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"path"
 	"regexp"
 	"strconv"
@@ -112,8 +113,39 @@ func (i *Info) LineURL(pathname string, line int) string {
 	})
 }
 
-func (i *Info) UsesURL() string {
-	return ""
+func (i *Info) UsesURL(modulePath string, importPath string, defParts []string) string {
+	sourcegraphBaseURL := "https://sourcegraph.com/-/godoc/refs?"
+
+	var def string
+	switch len(defParts) {
+	case 1:
+		def = defParts[0]
+
+	case 2:
+		typeName, methodName := defParts[0], defParts[1]
+		typeName = strings.TrimPrefix(typeName, "*")
+		def = typeName + "/" + methodName
+
+	default:
+		panic(fmt.Errorf("%v defParts, want 1 or 2", len(defParts)))
+	}
+
+	repo := strings.TrimPrefix(modulePath, "https://")
+	pkg := strings.TrimPrefix(importPath, "https://	")
+
+	log.Info(context.Background(), fmt.Sprintf("i.repoURL = %v\n", i.repoURL))
+	log.Info(context.Background(), fmt.Sprintf("i.moduleURL = %v\n", i.ModuleURL()))
+
+	q := url.Values{
+		"repo":   {repo},
+		"pkg":    {pkg},
+		"def":    {def},
+		"source": []string{"pkgsite"},
+	}
+
+	u := sourcegraphBaseURL + q.Encode()
+
+	return u
 }
 
 // RawURL returns a URL referring to the raw contents of a file relative to the
@@ -618,12 +650,11 @@ func giteaTransformCommit(commit string, isHash bool) string {
 // 	• {line}       - Line number for the identifier ("41").
 //
 type urlTemplates struct {
-	Repo        string `json:",omitempty"` // Optional URL template for the repository home page, with {repo}. If left empty, a default template "{repo}" is used.
-	Directory   string // URL template for a directory, with {repo}, {importPath}, {commit}, {dir}.
-	File        string // URL template for a file, with {repo}, {importPath}, {commit}, {file}, {base}.
-	Line        string // URL template for a line, with {repo}, {importPath}, {commit}, {file}, {base}, {line}.
-	Raw         string // Optional URL template for the raw contents of a file, with {repo}, {commit}, {file}.
-	Sourcegraph string // Optional URL template that will redirect to Sourcegraph website for the usage of a type, function, or method, with {}
+	Repo      string `json:",omitempty"` // Optional URL template for the repository home page, with {repo}. If left empty, a default template "{repo}" is used.
+	Directory string // URL template for a directory, with {repo}, {importPath}, {commit}, {dir}.
+	File      string // URL template for a file, with {repo}, {importPath}, {commit}, {file}, {base}.
+	Line      string // URL template for a line, with {repo}, {importPath}, {commit}, {file}, {base}, {line}.
+	Raw       string // Optional URL template for the raw contents of a file, with {repo}, {commit}, {file}.
 }
 
 var (

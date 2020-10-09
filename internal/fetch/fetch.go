@@ -675,57 +675,27 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGo
 		if p.Line == 0 { // invalid Position
 			return ""
 		}
-		sourceInfoLineURL := sourceInfo.LineURL(path.Join(innerPath, p.Filename), p.Line)
-		log.Info(ctx, fmt.Sprintf("sourceInfoLineURL = %v\n", sourceInfoLineURL))
-		return sourceInfoLineURL
+		return sourceInfo.LineURL(path.Join(innerPath, p.Filename), p.Line)
 	}
 	fileLinkFunc := func(filename string) string {
 		if sourceInfo == nil {
 			return ""
 		}
-		sourceInfoFileURL := sourceInfo.FileURL(path.Join(innerPath, filename))
-		log.Info(ctx, fmt.Sprintf("sourceInfoFileURL = %v\n", sourceInfoFileURL))
-		return sourceInfoFileURL
+		return sourceInfo.FileURL(path.Join(innerPath, filename))
 	}
-	// This will return the Sourcegraph URL, I guess?
-	// usesLinkFunc := func(defParts ...string) string {
-	// 	sourcegraphBaseURL := "https://sourcegraph.com"
-
-	// 	var def string
-	// 	switch len(defParts) == "" {
-	// 	case 1:
-
-	// 	case 3:
-
-	// 	default:
-	// 		panic(fmt.Errorf("%v defParts, want 1 or 3", len(defParts)))
-	// 	}
-
-	// 	q := url.Values{
-	// 		"repo": {pdoc.ProjectRoot},
-	// 		"pkg":  {pdoc.ImportPath},
-	// 		"def":  {def},
-	// 	}
-
-	// 	u := pdoc.sourcegraphURL + "/-/godoc/refs?" + q.Encode()
-	// 	return ""
-	// }
-	// log.Info(ctx, fmt.Sprintf("importPath = %v\n", importPath))
-	// log.Info(ctx, fmt.Sprintf("modulePath = %v\n", modulePath))
-	// log.Info(ctx, fmt.Sprintf("innerPath = %v\n", innerPath))
-	// usesLinkFunc := func(n ast.Node) string {
-	// 	if sourceInfo == nil {
-	// 		return ""
-	// 	}
-	// 	p :=
-	// }
+	usesLinkFunc := func(defParts []string) string {
+		if sourceInfo == nil {
+			return ""
+		}
+		return sourceInfo.UsesURL(modulePath, importPath, defParts)
+	}
 
 	docHTML, err := dochtml.Render(ctx, fset, d, dochtml.RenderOptions{
 		FileLinkFunc:   fileLinkFunc,
 		SourceLinkFunc: sourceLinkFunc,
-		// UsesLinkFunc:   usesLinkFunc,
-		ModInfo: modInfo,
-		Limit:   int64(MaxDocumentationHTML),
+		UsesLinkFunc:   usesLinkFunc,
+		ModInfo:        modInfo,
+		Limit:          int64(MaxDocumentationHTML),
 	})
 	if errors.Is(err, dochtml.ErrTooLarge) {
 		docHTML = template.MustParseAndExecuteToHTML(docTooLargeReplacement)

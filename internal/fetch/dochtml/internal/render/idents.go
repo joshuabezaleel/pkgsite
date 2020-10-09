@@ -318,6 +318,16 @@ type Link struct {
 var LinkTemplate = template.Must(template.New("link").Parse(
 	`<a {{with .Class}}class="{{.}}" {{end}}href="{{.Href}}">{{.Text}}</a>`))
 
+type SourcegraphLink struct {
+	Href  string
+	Text  string
+	Class string
+	Title string
+}
+
+var SourcegraphLinkTemplate = template.Must(template.New("sourcegraph_link").Parse(
+	`<a class="{{.Class}}" title="{{.Title}}" href="{{.Href}}">{{.Text}}</a>`))
+
 // lookup looks up a dot-separated identifier.
 // E.g., "pkg", "pkg.Var", "Recv.Method", "Struct.Field", "pkg.Struct.Field"
 func (r identifierResolver) lookup(id string) (pkgPath, name string, ok bool) {

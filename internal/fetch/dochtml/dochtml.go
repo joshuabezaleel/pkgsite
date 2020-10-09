@@ -28,7 +28,6 @@ import (
 	"github.com/google/safehtml/uncheckedconversions"
 	"golang.org/x/pkgsite/internal/fetch/dochtml/internal/render"
 	"golang.org/x/pkgsite/internal/fetch/internal/doc"
-	"golang.org/x/pkgsite/internal/log"
 )
 
 var (
@@ -117,12 +116,9 @@ func Render(ctx context.Context, fset *token.FileSet, p *doc.Package, opt Render
 	sourceLink := func(name string, node ast.Node) safehtml.HTML {
 		return linkHTML(name, opt.SourceLinkFunc(node), "Documentation-source")
 	}
-
 	usesLink := func(title string, defParts ...string) safehtml.HTML {
-		// name, url, class
-		return linkHTML(title, opt.UsesLinkFunc(defParts), "Documentation-uses")
+		return sourcegraphLinkHTML("Uses", opt.UsesLinkFunc(defParts), "Documentation-uses", title)
 	}
-	// log.Info(ctx, usesLink)
 
 	tmpl := template.Must(htmlPackage.Clone()).Funcs(map[string]interface{}{
 		"render_short_synopsis": r.ShortSynopsis,
@@ -171,10 +167,14 @@ func linkHTML(name, url, class string) safehtml.HTML {
 	if url == "" {
 		return safehtml.HTMLEscaped(name)
 	}
-	a := render.ExecuteToHTML(render.LinkTemplate, render.Link{Class: class, Href: url, Text: name})
-	log.Info(context.Background(), a)
-	return a
-	// return
+	return render.ExecuteToHTML(render.LinkTemplate, render.Link{Class: class, Href: url, Text: name})
+}
+
+func sourcegraphLinkHTML(name, url, class, title string) safehtml.HTML {
+	if url == "" {
+		return safehtml.HTMLEscaped(name)
+	}
+	return render.ExecuteToHTML(render.SourcegraphLinkTemplate, render.SourcegraphLink{Class: class, Href: url, Text: name, Title: title})
 }
 
 // examples is an internal representation of all package examples.
